@@ -1,7 +1,8 @@
 [bits 32]
 
 section .data
-size_output db "Loaded kernel size: ", 0
+boot_msg db "Booted", 0
+size_output db "Kernel memory footprint: ", 0
 
 section .multiboot
 align 4
@@ -12,20 +13,12 @@ align 4
 section .text
 global _start
 _start:
-	mov byte [0xb8002], 'B'
-	mov byte [0xb8003], 0x0f
-	mov byte [0xb8004], 'o'
-	mov byte [0xb8005], 0x0f
-	mov byte [0xb8006], 'o'
-	mov byte [0xb8007], 0x0f
-	mov byte [0xb8008], 't'
-	mov byte [0xb8009], 0x0f
-	mov byte [0xb800a], 'e'
-	mov byte [0xb800b], 0x0f
-	mov byte [0xb800c], 'd'
-	mov byte [0xb800d], 0x0f
-
 	mov esp, stack_top
+
+	push boot_msg
+	push 0xb8002
+	call print_vga
+	add esp, 8
 
 	extern kernel_start
 	extern kernel_end
@@ -67,7 +60,7 @@ _start:
 	add esp, 8
 
 	push kernel_size
-	push 0xb80ca
+	push 0xb80d4
 	call print_vga
 	add esp, 8
 
