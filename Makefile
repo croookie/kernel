@@ -15,4 +15,7 @@ clean:
 	rm my_os.iso
 
 run:
-	qemu-system-i386 -cdrom my_os.iso -boot d -display curses
+	qemu-system-x86_64 -cdrom my_os.iso -boot d -display curses
+
+debug:
+	qemu-system-x86_64 -cdrom my_os.iso -s -S -display curses
