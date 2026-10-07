@@ -21,6 +21,17 @@ static struct Cursor cursor = {
 };
 
 void kputc(char c) {
+	if (c == '\n') {
+		if (cursor.row == ROWS - 1) {
+			scroll();
+			cursor.column = 0;
+			return;
+		}
+		cursor.row++;
+		cursor.column = 0;
+		return;
+	}
+
 	uint16_t vga_pos = cursor.row * COLUMNS + cursor.column;
 	vga_buf[vga_pos] = ((uint16_t)(cursor.color << 8)) | (uint8_t)c;
 

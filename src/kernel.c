@@ -5,5 +5,5 @@
 
 void kmain(void) {
 	set_color(YELLOW, BLACK);
-	kputs("Switch to 64 bit mode and enter kmain");
+	kputs("Switch to 64 bit mode and enter kmain\n");
 }
