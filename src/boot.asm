@@ -3,6 +3,7 @@
 section .data
 boot_msg db "Booted", 0
 size_output db "Kernel memory footprint: ", 0
+bytes db "bytes", 0
 
 section .multiboot
 align 4
@@ -73,7 +74,7 @@ _start:
 	mov esp, stack_top
 
 	push boot_msg
-	push 0xb8002
+	push 0xb8000
 	call print_vga
 	add esp, 8
 
@@ -112,12 +113,17 @@ _start:
 		pop ebp
 
 	push size_output
-	push 0xb80a2
+	push 0xb80a0
 	call print_vga
 	add esp, 8
 
 	push kernel_size
-	push 0xb80d4
+	push 0xb80d2
+	call print_vga
+	add esp, 8
+
+	push bytes
+	push 0xb80e6
 	call print_vga
 	add esp, 8
 
@@ -146,9 +152,7 @@ _start:
 	or eax, 1 << 8
 	wrmsr
 
-
 	; enabling paging
-	break:
 	mov eax, cr0
 	or eax, 0x80000000
 	mov cr0, eax
@@ -158,6 +162,7 @@ _start:
 
 	[bits 64]
 	long_mode_entry:
+	extern kmain
 		mov ax, DATA64_SEG
 		mov ds, ax
 		mov ss, ax
@@ -170,8 +175,7 @@ _start:
 
 		mov rsp, stack_top
 
-end:
-		mov rax, 0x123456789abcdef0
+		call kmain
 
 		hlt
 		jmp $
