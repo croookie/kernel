@@ -6,7 +6,7 @@
 #define ROWS 25
 #define COLUMNS 80
 
-static volatile uint16_t *const vga_buf = (volatile uint16_t *)0xb8000;
+static volatile uint16_t *const vga_buf = (volatile uint16_t *)0xffff8000000b8000;
 
 struct Cursor {
 	uint8_t row;

@@ -6,12 +6,14 @@ out/os.iso: src/boot.asm src/kernel.c linker.ld grub.cfg
 	mkdir -p isodir/boot/grub
 	cp grub.cfg isodir/boot/grub/grub.cfg
 	nasm -f elf64 src/boot.asm -o build/boot.o
+	nasm -f elf64 src/higher_half.asm -o build/higher_half.o
 	x86_64-elf-gcc \
     	-ffreestanding \
     	-m64 \
     	-mno-red-zone \
     	-O2 \
     	-c \
+		-mcmodel=large \
     	src/kernel.c \
 		-o build/kernel.o
 	x86_64-elf-gcc \
@@ -20,6 +22,7 @@ out/os.iso: src/boot.asm src/kernel.c linker.ld grub.cfg
     	-mno-red-zone \
     	-O2 \
     	-c \
+		-mcmodel=large \
     	src/output.c \
 		-o build/output.o
 	x86_64-elf-gcc \
@@ -28,12 +31,14 @@ out/os.iso: src/boot.asm src/kernel.c linker.ld grub.cfg
     	-mno-red-zone \
     	-O2 \
     	-c \
+		-mcmodel=large \
     	src/memory.c \
 		-o build/memory.o
 	x86_64-elf-ld \
     	-T linker.ld \
     	-o build/kernel.elf \
     	build/boot.o \
+		build/higher_half.o \
 		build/kernel.o \
 		build/output.o \
 		build/memory.o

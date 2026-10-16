@@ -1,6 +1,14 @@
 [bits 32]
 
-section .data
+extern enter_higher_half
+
+global data64_descriptor
+global GDT_start
+global stack_top
+
+%define VIRTUAL(addr) (addr + 0xffff800000000000)
+
+section .boot.data
 boot_msg db "Booted", 0
 size_output db "Kernel memory footprint: ", 0
 bytes db "bytes", 0
@@ -11,7 +19,7 @@ align 4
 	dd 0x00000002
 	dd -(0x1BADB002 + 0x00000002)
 
-section .text
+section .boot.text
 global _start
 
 	; identity-maps the first 2M of address space
@@ -48,6 +56,46 @@ global _start
 			loop .map_pt
 
 		ret
+
+	; map the first 2 MiB of physical address space (0x0 to 0x1fffff)
+	; to the upper canonical half of the virtual address space
+	; (0xffff800000000000 to 0xffff8000001fffff)
+	setup_higher_half:
+		; zero the three pages starting from higher_half.PDPT_table
+		xor eax, eax
+		mov edi, higher_half.PDPT_table
+		mov ecx, 3072
+		rep stosd
+
+		; virtual address 0xffff800000000000 corresponds to
+		; PML4[256], PDPT[0], PD[0] and PT[0]
+		mov eax, higher_half.PDPT_table
+		or eax, 0x3
+		mov ecx, PML4_table + 256 * 8
+		mov [ecx], eax
+		
+		mov eax, higher_half.PD_table
+		or eax, 0x3
+		mov ecx, higher_half.PDPT_table
+		mov [ecx], eax
+
+		mov eax, higher_half.PT_table
+		or eax, 0x3
+		mov ecx, higher_half.PD_table
+		mov [ecx], eax
+
+		mov edi, higher_half.PT_table
+		mov eax, 0x3
+		mov ecx, 512
+
+		.map_pt:
+			mov [edi], eax
+			add edi, 8
+			add eax, 0x1000
+			loop .map_pt
+
+		ret
+
 	; prints characters to screen using vga text mode with white on black color
 	; first arg - address of string to print;
 	; second arg - address of vga at which to start printing
@@ -132,7 +180,7 @@ _start:
 	mov eax, cr0
 	and eax, 0x7fffffff
 	mov cr0, eax
-;
+
 	; enabling PAE
 	mov eax, cr4
 	or eax, 1 << 5
@@ -162,25 +210,15 @@ _start:
 
 	[bits 64]
 	long_mode_entry:
-	extern kmain
-		mov ax, DATA64_SEG
-		mov ds, ax
-		mov ss, ax
-		mov es, ax
+		call setup_higher_half
 
-		xor rax, rax
-		mov rbx, rax
-		mov rcx, rax
-		mov rdx, rax
-
-		mov rsp, stack_top
-
-		call kmain
+		mov rax, enter_higher_half
+		jmp rax
 
 		hlt
 		jmp $
 
-section .bss
+section .boot.bss nobits
 kernel_size:
 	resb 5
 
@@ -198,8 +236,15 @@ PD_table:
 	resb 4096
 PT_table:
 	resb 4096
+higher_half:
+.PDPT_table:
+	resb 4096
+.PD_table:
+	resb 4096
+.PT_table:
+	resb 4096
 
-section .rodata
+section .boot.rodata
 GDT_start:
 	null:
 		dq 0
