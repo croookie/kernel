@@ -15,7 +15,7 @@ struct Cursor {
 };
 
 static struct Cursor cursor = {
-    .row = 2,
+    .row = 1,
     .column = 0,
     .color = WHITE
 };

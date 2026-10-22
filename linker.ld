@@ -40,6 +40,7 @@ SECTIONS
 	kernel_end = .;
 	
 	. += higher_half_offset;
+	higher_stack_top = stack_top + higher_half_offset;
 
 	.higher_half.text ALIGN(4K) : AT(ADDR(.higher_half.text) - higher_half_offset)
 	{

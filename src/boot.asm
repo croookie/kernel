@@ -1,12 +1,12 @@
 [bits 32]
 
 extern enter_higher_half
-
+extern higher_half_offset
 global data64_descriptor
 global GDT_start
 global stack_top
 
-%define VIRTUAL(addr) (addr + 0xffff800000000000)
+%define VIRTUAL(addr) (addr + higher_half_offset)
 
 section .boot.data
 boot_msg db "Booted", 0
@@ -118,60 +118,12 @@ global _start
 		; epilogue
 		pop ebp
 		ret
+
 _start:
 	mov esp, stack_top
 
 	push boot_msg
 	push 0xb8000
-	call print_vga
-	add esp, 8
-
-	extern kernel_start
-	extern kernel_end
-
-	mov eax, kernel_end
-	sub eax, kernel_start
-	mov ebx, kernel_size
-
-	; takes input number from eax,
-	; puts the output string at address pointed to by ebx
-	itoa:
-		; push ebp and store esp there for bounds checking in .pop
-		push ebp
-		mov ebp, esp
-	.loop:
-		xor edx, edx
-		mov ecx, 10
-		div ecx
-		push edx
-
-		; end loop if dividend = 0
-		test eax, eax
-		jne .loop
-
-	.pop:
-		pop eax
-		add eax, '0'
-		mov [ebx], al
-		inc ebx
-		cmp ebp, esp
-		jne .pop
-
-	.end:
-		pop ebp
-
-	push size_output
-	push 0xb80a0
-	call print_vga
-	add esp, 8
-
-	push kernel_size
-	push 0xb80d2
-	call print_vga
-	add esp, 8
-
-	push bytes
-	push 0xb80e6
 	call print_vga
 	add esp, 8
 
@@ -223,6 +175,7 @@ kernel_size:
 	resb 5
 
 alignb 16
+global stack_top
 stack_bottom:
 	resb 16384
 stack_top:
@@ -261,6 +214,7 @@ GDT_end:
 CODE64_SEG equ code64_descriptor - GDT_start
 DATA64_SEG equ data64_descriptor - GDT_start
 
+global GDT_descriptor
 GDT_descriptor:
 	dw GDT_end  - GDT_start - 1
 	dq GDT_start

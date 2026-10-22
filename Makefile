@@ -34,6 +34,15 @@ out/os.iso: src/boot.asm src/kernel.c linker.ld grub.cfg
 		-mcmodel=large \
     	src/memory.c \
 		-o build/memory.o
+	x86_64-elf-gcc \
+    	-ffreestanding \
+    	-m64 \
+    	-mno-red-zone \
+    	-O2 \
+    	-c \
+		-mcmodel=large \
+    	src/itoa.c \
+		-o build/itoa.o
 	x86_64-elf-ld \
     	-T linker.ld \
     	-o build/kernel.elf \
@@ -41,7 +50,8 @@ out/os.iso: src/boot.asm src/kernel.c linker.ld grub.cfg
 		build/higher_half.o \
 		build/kernel.o \
 		build/output.o \
-		build/memory.o
+		build/memory.o \
+		build/itoa.o
 	cp build/kernel.elf isodir/boot/kernel.elf
 	grub-mkrescue isodir -o out/os.iso
 
