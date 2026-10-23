@@ -6,13 +6,6 @@ global data64_descriptor
 global GDT_start
 global stack_top
 
-%define VIRTUAL(addr) (addr + higher_half_offset)
-
-section .boot.data
-boot_msg db "Booted", 0
-size_output db "Kernel memory footprint: ", 0
-bytes db "bytes", 0
-
 section .multiboot
 align 4
 	dd 0x1BADB002
@@ -96,36 +89,17 @@ global _start
 
 		ret
 
-	; prints characters to screen using vga text mode with white on black color
-	; first arg - address of string to print;
-	; second arg - address of vga at which to start printing
-	print_vga:
-		push ebp
-		mov ebp, esp
-		mov ebx, [ebp+12]
-		mov eax, [ebp+8]
-	.loop:
-		mov cl, [ebx]
-		mov [eax], cl
-		inc eax
-		mov byte [eax], 0x0f
-		inc eax
-
-		inc ebx
-		cmp byte [ebx], 0
-		jne .loop
-
-		; epilogue
-		pop ebp
-		ret
-
 _start:
 	mov esp, stack_top
 
-	push boot_msg
-	push 0xb8000
-	call print_vga
-	add esp, 8
+	; prints "Booted" to VGA
+	mov edi, 0xB8000
+	mov eax, 0x0F6F0F42
+	stosd
+	mov eax, 0x0F740F6F
+	stosd
+	mov eax, 0x0F640F65
+	stosd
 
 	; entering long mode
 	; setting cr0.pg to 0
@@ -141,7 +115,6 @@ _start:
 	call setup_paging
 
 	; loading paging structure base address into cr3
-	xor eax, eax
 	mov eax, PML4_table
 	mov cr3, eax
 
@@ -169,10 +142,6 @@ _start:
 
 		hlt
 		jmp $
-
-section .boot.bss nobits
-kernel_size:
-	resb 5
 
 alignb 16
 global stack_top
