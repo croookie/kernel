@@ -15,36 +15,33 @@ SECTIONS
 
 	.boot.text ALIGN(4K) :
 	{
-		KEEP(*(.boot.text))
+		build/boot.o(.text)
 	}
 
 	.boot.rodata ALIGN(4K) :
     {
-        *(.boot.rodata)
+        build/boot.o(.rodata)
     }
 
     .boot.data ALIGN(4K) :
     {
-        *(.boot.data)
+        build/boot.o(.data)
     }
 
     .boot.bss ALIGN(4K) :
     {
-        *(.boot.bss)
+        build/boot.o(.bss)
     }
 
 	bootstrap_end_addr = .;
-	/* TODO
-	 * cnange that to give an actual kernel memory footprint,
-	 * counting higher half asm and kernel c as well
-	 */
 	
 	higher_half_lma = .;
 
 	. += higher_half_offset;
-	higher_stack_top = stack_top + higher_half_offset;
 
 	higher_half_vma = .;
+
+	higher_stack_top = stack_top + higher_half_offset;
 
 	.higher_half.text ALIGN(4K) : AT(ADDR(.higher_half.text) - higher_half_offset)
 	{
