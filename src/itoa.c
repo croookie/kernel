@@ -1,6 +1,6 @@
 #include "itoa.h"
 
-char *itoa(long value, char *buf, unsigned short base) {
+char *itoa(unsigned long value, char *buf, unsigned short base) {
 	if (value == 0)  {
 		buf[0] = 0;
 		buf[1] = '\0';

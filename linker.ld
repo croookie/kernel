@@ -6,7 +6,7 @@ SECTIONS
 
 	. = 1M;
 
-	kernel_start = .;
+	kernel_load_addr = .;
 
 	.multiboot ALIGN(4K) :
 	{
@@ -33,14 +33,18 @@ SECTIONS
         *(.boot.bss)
     }
 
+	bootstrap_end_addr = .;
 	/* TODO
 	 * cnange that to give an actual kernel memory footprint,
 	 * counting higher half asm and kernel c as well
 	 */
-	kernel_end = .;
 	
+	higher_half_lma = .;
+
 	. += higher_half_offset;
 	higher_stack_top = stack_top + higher_half_offset;
+
+	higher_half_vma = .;
 
 	.higher_half.text ALIGN(4K) : AT(ADDR(.higher_half.text) - higher_half_offset)
 	{
@@ -63,4 +67,6 @@ SECTIONS
         *(COMMON)
         *(.bss .bss.*)
     }
+
+	kernel_end = .;
 }
